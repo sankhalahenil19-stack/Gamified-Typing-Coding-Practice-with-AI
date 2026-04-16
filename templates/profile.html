@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — Typing Racer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0a0c0f;
+      --surface: #111418;
+      --surface2: #181c22;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.12);
+      --accent: #f97316;
+      --accent2: #fb923c;
+      --accent-glow: rgba(249,115,22,0.3);
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      background-image:
+        radial-gradient(ellipse 70% 50% at 20% 0%, rgba(249,115,22,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 100%, rgba(59,130,246,0.05) 0%, transparent 60%);
+    }
+    .navbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 40px;
+      background: rgba(10,12,15,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .navbar-brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 15px; letter-spacing: -0.02em;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .navbar-brand span {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 10px var(--accent);
+      display: inline-block;
+    }
+    .navbar-links { display: flex; align-items: center; gap: 4px; }
+    .navbar-links a {
+      color: var(--muted2); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 12px; border-radius: 6px; transition: all 0.2s;
+    }
+    .navbar-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .page { max-width: 1200px; margin: 0 auto; padding: 40px 32px; }
+    .hero-banner {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 40px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: center;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 0% 50%, rgba(249,115,22,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute; top: -1px; left: 40px; right: 40px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(249,115,22,0.5), transparent);
+    }
+    .hero-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+      color: var(--accent); text-transform: uppercase;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+    }
+    .hero-label::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .hero-name {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800; letter-spacing: -0.04em; line-height: 1.0;
+    }
+    .hero-name .at-sign { color: var(--accent); }
+    .hero-sub { margin-top: 14px; font-size: 14px; color: var(--muted); }
+    .hero-cta { margin-top: 22px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--accent); color: #fff;
+      border: none; cursor: pointer;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+      text-decoration: none; transition: all 0.2s;
+      box-shadow: 0 0 24px rgba(249,115,22,0.25);
+    }
+    .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+    .hero-avatar {
+      width: 120px; height: 120px; border-radius: 16px;
+      background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(59,130,246,0.15));
+      border: 1px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800;
+      color: var(--accent); flex-shrink: 0;
+    }
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px 24px;
+      position: relative; overflow: hidden; transition: border-color 0.2s, transform 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--sc, var(--accent)); opacity: 0.6;
+    }
+    .stat-card:nth-child(1) { --sc: var(--accent); }
+    .stat-card:nth-child(2) { --sc: var(--blue); }
+    .stat-card:nth-child(3) { --sc: var(--green); }
+    .stat-card:nth-child(4) { --sc: #a855f7; }
+    .stat-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--muted); text-transform: uppercase;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px; font-weight: 800; letter-spacing: -0.04em;
+    }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px;
+    }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+    }
+    .panel-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; }
+    .panel-badge {
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+      background: rgba(249,115,22,0.12); color: var(--accent);
+    }
+    .chart-wrap { height: 180px; position: relative; }
+    .leaderboard-panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; margin-bottom: 24px;
+    }
+    .leaderboard-head {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .leaderboard-head-title {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: rgba(255,255,255,0.02); }
+    thead th {
+      padding: 12px 24px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted); text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    thead th:last-child { text-align: right; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td { padding: 14px 24px; font-size: 14px; }
+    tbody td:last-child { text-align: right; }
+    .rank-cell {
+      width: 60px; font-family: 'DM Mono', monospace;
+      font-size: 13px; color: var(--muted2); font-weight: 500;
+    }
+    .rank-1 .rank-cell { color: #facc15; }
+    .rank-2 .rank-cell { color: #94a3b8; }
+    .rank-3 .rank-cell { color: #c97c4b; }
+    .username-cell { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+    .username-avatar {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; font-family: 'Syne', sans-serif; color: var(--muted2);
+    }
+    .rank-1 .username-avatar { background: rgba(250,204,21,0.1); border-color: rgba(250,204,21,0.3); color: #facc15; }
+    .rank-2 .username-avatar { background: rgba(148,163,184,0.1); border-color: rgba(148,163,184,0.3); color: #94a3b8; }
+    .rank-3 .username-avatar { background: rgba(201,124,75,0.1); border-color: rgba(201,124,75,0.3); color: #c97c4b; }
+    .you-badge {
+      font-size: 10px; padding: 2px 6px; border-radius: 10px;
+      background: rgba(249,115,22,0.15); color: var(--accent); font-weight: 600;
+    }
+    .score-cell {
+      font-family: 'DM Mono', monospace; font-size: 13px;
+      font-weight: 500; color: var(--muted2);
+    }
+    .score-bar-wrap { display: flex; align-items: center; gap: 12px; justify-content: flex-end; }
+    .score-bar { width: 80px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+    .score-bar-fill {
+      height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--blue));
+    }
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
+    .empty-state p { font-size: 14px; margin-top: 10px; }
+    .fade-up { animation: fadeUp 0.5s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up:nth-child(2) { animation-delay: 0.07s; }
+    .fade-up:nth-child(3) { animation-delay: 0.14s; }
+    .fade-up:nth-child(4) { animation-delay: 0.21s; }
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .grid-2 { grid-template-columns: 1fr; }
+      .hero-banner { grid-template-columns: 1fr; }
+      .hero-avatar { display: none; }
+      .page { padding: 24px 16px; }
+      .navbar { padding: 14px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-brand"><span></span> Typing Racer</div>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/leaderboard">Leaderboard</a>
+    <a href="/logout" style="color:var(--muted)">Logout</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero-banner fade-up">
+    <div>
+      <div class="hero-label">Active Profile</div>
+      <div class="hero-name">
+        <span class="at-sign">{{ username[0] | upper }}</span>{{ username[1:] }}
+      </div>
+      <p class="hero-sub">Track your typing speed, accuracy &amp; climb the leaderboard.</p>
+      <div class="hero-cta">
+        <a href="/" class="btn-primary">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+          Start Typing
+        </a>
+      </div>
+    </div>
+    <div class="hero-avatar">{{ username[0] | upper }}</div>
+  </div>
+
+  <!-- STATS -->
+  {% set best_wpm = (data | map(attribute=0) | max) if data else 0 %}
+  {% set avg_wpm = ((data | map(attribute=0) | sum) / data|length) | round(1) if data and data|length > 0 else 0 %}
+  {% set avg_acc = ((data | map(attribute=1) | sum) / data|length) | round(1) if data and data|length > 0 else 0 %}
+  {% set games = data|length if data else 0 %}
+
+  <div class="stats-row fade-up">
+    <div class="stat-card">
+      <div class="stat-label">Best WPM</div>
+      <div class="stat-value">{{ best_wpm }}</div>
+      <div class="stat-sub">Personal record</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg WPM</div>
+      <div class="stat-value">{{ avg_wpm }}</div>
+      <div class="stat-sub">All sessions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Accuracy</div>
+      <div class="stat-value">{{ avg_acc }}<span style="font-size:18px;color:var(--muted)">%</span></div>
+      <div class="stat-sub">Keystroke precision</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Games Played</div>
+      <div class="stat-value">{{ games }}</div>
+      <div class="stat-sub">Total sessions</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="grid-2 fade-up">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">WPM Over Time</div>
+        <span class="panel-badge">Speed</span>
+      </div>
+      <div class="chart-wrap"><canvas id="wpmChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Accuracy Trend</div>
+        <span class="panel-badge" style="background:rgba(34,197,94,0.12);color:var(--green)">Precision</span>
+      </div>
+      <div class="chart-wrap"><canvas id="accChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="leaderboard-panel fade-up">
+    <div class="leaderboard-head">
+      <div class="leaderboard-head-title">
+        <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+        </svg>
+        Global Rankings
+      </div>
+      <span class="panel-badge">Top 10</span>
+    </div>
+
+    {% if leaderboard %}
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Username</th>
+          <th>Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set max_score = leaderboard[0][2] if leaderboard else 1 %}
+        {% for player in leaderboard %}
+        <tr class="{% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% endif %}">
+          <td class="rank-cell">
+            {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}#{{ loop.index }}{% endif %}
+          </td>
+          <td>
+            <div class="username-cell">
+              <div class="username-avatar">{{ player[0][0] | upper }}</div>
+              <span>{{ player[0] }}</span>
+              {% if player[0] == username %}<span class="you-badge">You</span>{% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="score-bar-wrap">
+              <span class="score-cell">{{ player[2] }} WPM</span>
+              <div class="score-bar">
+                <div class="score-bar-fill" style="width:{{ ((player[2] / max_score) * 100)|int }}%"></div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+      </svg>
+      <p>No rankings yet. Complete a game to appear on the leaderboard!</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Achievements Panel -->
+  <div class="leaderboard-panel fade-up" style="margin-top:24px;">
+    <div class="leaderboard-head">
+      <div class="leaderboard-head-title">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Achievements
+      </div>
+      <span class="panel-badge" style="background:rgba(245,158,11,0.12);color:#f59e0b;">Badges</span>
+    </div>
+    <div id="achievementsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:16px;">
+      <div style="color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0;">Loading achievements…</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="dataHolder" data-info='{{ data | tojson | safe }}' style="display:none;"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const rawData = JSON.parse(document.getElementById("dataHolder").dataset.info || "[]");
+  const wpmValues = rawData.map(d => d[0]);
+  const accValues = rawData.map(d => d[1]);
+  const labels = rawData.map((_, i) => "G" + (i + 1));
+
+  const baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: false,
+        grid: { color: "rgba(255,255,255,0.04)" },
+        ticks: { color: "#64748b", font: { family: "'DM Mono',monospace", size: 10 } },
+        border: { color: "transparent" }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { color: "#64748b", font: { family: "'DM Mono',monospace", size: 10 } },
+        border: { color: "rgba(255,255,255,0.06)" }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "#181c22", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1,
+        titleColor: "#f1f5f9", bodyColor: "#94a3b8", padding: 10, cornerRadius: 8
+      }
+    }
+  };
+
+  if (wpmValues.length > 0) {
+    new Chart(document.getElementById("wpmChart"), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'WPM', data: wpmValues,
+          borderColor: '#f97316', backgroundColor: 'rgba(249,115,22,0.08)',
+          fill: true, tension: 0.4, pointRadius: 3,
+          pointBackgroundColor: '#f97316', pointBorderColor: '#0a0c0f', pointBorderWidth: 2
+        }]
+      },
+      options: baseOpts
+    });
+
+    new Chart(document.getElementById("accChart"), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Accuracy %', data: accValues,
+          borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.08)',
+          fill: true, tension: 0.4, pointRadius: 3,
+          pointBackgroundColor: '#22c55e', pointBorderColor: '#0a0c0f', pointBorderWidth: 2
+        }]
+      },
+      options: baseOpts
+    });
+  }
+});
+
+// Load achievements
+fetch('/get-achievements')
+  .then(r => r.json())
+  .then(badges => {
+    const el = document.getElementById('achievementsList');
+    if (!el) return;
+    const ALL = [
+      {key:'first_race',   icon:'🏁', name:'First Race',    desc:'Complete your first race'},
+      {key:'speed_demon',  icon:'⚡', name:'Speed Demon',   desc:'Hit 60+ WPM'},
+      {key:'sharpshooter', icon:'🎯', name:'Sharpshooter',  desc:'100% accuracy'},
+      {key:'streak_3',     icon:'🔥', name:'On Fire',       desc:'3-day streak'},
+      {key:'streak_7',     icon:'🌟', name:'Week Warrior',  desc:'7-day streak'},
+      {key:'century',      icon:'💯', name:'Century',       desc:'100 races'},
+      {key:'gold_league',  icon:'🥇', name:'Gold League',   desc:'Reach Gold'},
+    ];
+    const earned = new Set(badges.map(b => b.key));
+    el.innerHTML = ALL.map(b => {
+      const got = earned.has(b.key);
+      return `<div style="background:${got ? 'rgba(245,158,11,0.08)' : 'var(--surface)'};border:1px solid ${got ? 'rgba(245,158,11,0.3)' : 'var(--border)'};border-radius:12px;padding:14px 10px;text-align:center;opacity:${got ? 1 : 0.35};">
+        <div style="font-size:26px;margin-bottom:6px;">${b.icon}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;">${b.name}</div>
+        <div style="font-size:10px;color:var(--muted2);">${b.desc}</div>
+        ${got ? '<div style="font-size:10px;color:#f59e0b;margin-top:6px;font-weight:600;">EARNED</div>' : ''}
+      </div>`;
+    }).join('');
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>

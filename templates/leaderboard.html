@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard — Typing Racer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0c0f;
+      --surface: #111418;
+      --surface2: #181c22;
+      --border: rgba(255,255,255,0.07);
+      --border2: rgba(255,255,255,0.13);
+      --accent: #f97316;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --purple: #a855f7;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+      /* badges */
+      --bronze: #c97c4b;
+      --silver: #94a3b8;
+      --gold: #facc15;
+      --platinum: #67e8f9;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 10% 0%, rgba(249,115,22,0.06) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 90% 80%, rgba(168,85,247,0.05) 0%, transparent 60%);
+    }
+
+    /* NAV */
+    .navbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 40px;
+      background: rgba(10,12,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 15px;
+      letter-spacing: -0.02em; display: flex; align-items: center; gap: 8px;
+    }
+    .nav-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 10px var(--accent);
+    }
+    .nav-links { display: flex; gap: 4px; }
+    .nav-links a {
+      color: var(--muted2); text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 12px; border-radius: 6px; transition: all 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    /* PAGE */
+    .page { max-width: 1100px; margin: 0 auto; padding: 40px 32px; }
+
+    /* PAGE HEADER */
+    .page-header {
+      margin-bottom: 32px;
+      display: flex; align-items: flex-end; justify-content: space-between;
+    }
+    .page-title {
+      font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .page-title span { color: var(--accent); }
+    .page-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* TABS */
+    .tabs {
+      display: flex; gap: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 4px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+    .tab {
+      font-size: 13px; font-weight: 500; padding: 8px 18px;
+      border-radius: 7px; cursor: pointer; border: none;
+      background: transparent; color: var(--muted2);
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: var(--surface2); color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* PANELS */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* GLOBAL LEADERBOARD TABLE */
+    .lb-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .lb-card-head {
+      padding: 20px 24px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lb-card-title {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .lb-card-badge {
+      font-size: 11px; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; background: rgba(249,115,22,0.12); color: var(--accent);
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: rgba(255,255,255,0.025); }
+    thead th {
+      padding: 11px 20px; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    thead th.right { text-align: right; }
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      transition: background 0.15s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.025); }
+    tbody td { padding: 13px 20px; font-size: 14px; vertical-align: middle; }
+    tbody td.right { text-align: right; }
+
+    /* RANK COL */
+    .rank-num {
+      font-family: 'DM Mono', monospace; font-size: 13px;
+      color: var(--muted); font-weight: 500; min-width: 40px; display: inline-block;
+    }
+    .rank-medal { font-size: 16px; }
+    tr.r1 .rank-num { color: var(--gold); }
+    tr.r2 .rank-num { color: var(--silver); }
+    tr.r3 .rank-num { color: var(--bronze); }
+
+    /* USERNAME COL */
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .uavatar {
+      width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted2); flex-shrink: 0;
+    }
+    tr.r1 .uavatar { background: rgba(250,204,21,0.1); border-color: rgba(250,204,21,0.3); color: var(--gold); }
+    tr.r2 .uavatar { background: rgba(148,163,184,0.1); border-color: rgba(148,163,184,0.3); color: var(--silver); }
+    tr.r3 .uavatar { background: rgba(201,124,75,0.1); border-color: rgba(201,124,75,0.3); color: var(--bronze); }
+    .uname { font-weight: 500; }
+
+    /* BADGE */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: 20px; letter-spacing: 0.04em;
+    }
+    .badge-bronze { background: rgba(201,124,75,0.15); color: var(--bronze); border: 1px solid rgba(201,124,75,0.3); }
+    .badge-silver { background: rgba(148,163,184,0.15); color: var(--silver); border: 1px solid rgba(148,163,184,0.3); }
+    .badge-gold   { background: rgba(250,204,21,0.12); color: var(--gold);   border: 1px solid rgba(250,204,21,0.3); }
+    .badge-platinum { background: rgba(103,232,249,0.1); color: var(--platinum); border: 1px solid rgba(103,232,249,0.3); }
+
+    /* SCORE COL */
+    .score-wrap { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+    .score-num { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500; color: var(--muted2); min-width: 50px; text-align: right; }
+    .score-bar { width: 70px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--purple)); }
+
+    /* SOLVED COUNT */
+    .solved-num {
+      font-family: 'DM Mono', monospace; font-size: 13px;
+      font-weight: 500; color: var(--green);
+    }
+
+    /* CONTEST / PER-QUESTION TABLE */
+    .diff-badge {
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px;
+    }
+    .diff-Easy   { background: rgba(34,197,94,0.12); color: var(--green); }
+    .diff-Medium { background: rgba(249,115,22,0.12); color: var(--accent); }
+    .diff-Hard   { background: rgba(239,68,68,0.12); color: #ef4444; }
+
+    .solvers-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .solvers-bar { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+    .solvers-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--green)); }
+
+    /* EMPTY */
+    .empty { text-align: center; padding: 60px 24px; color: var(--muted); font-size: 14px; }
+
+    /* BADGE LEGEND */
+    .legend {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted2);
+    }
+
+    /* FADE */
+    .fade-up { animation: fadeUp 0.4s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up:nth-child(2) { animation-delay:.06s; }
+    .fade-up:nth-child(3) { animation-delay:.12s; }
+
+    @media(max-width:768px) {
+      .page { padding: 24px 16px; }
+      .navbar { padding: 14px 20px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .score-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-brand"><div class="nav-dot"></div> Typing Racer</div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/code">Code Mode</a>
+    <a href="/profile">Profile</a>
+    <a href="/logout" style="color:var(--muted)">Logout</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="page-header fade-up">
+    <div>
+      <div class="page-title">Global <span>Leaderboard</span></div>
+      <div class="page-sub">Rankings based on coding challenges solved &amp; points earned</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs fade-up">
+    <button class="tab active" onclick="switchTab('global', this)">🏆 Global Rankings</button>
+    <button class="tab" onclick="switchTab('contests', this)">📋 Challenge View</button>
+  </div>
+
+  <!-- BADGE LEGEND -->
+  <div class="legend fade-up">
+    <span style="font-size:12px;color:var(--muted);font-weight:600;margin-right:4px;">BADGES:</span>
+    <div class="legend-item"><span class="badge badge-bronze">🥉 Bronze</span> 1–49 pts</div>
+    <div class="legend-item"><span class="badge badge-silver">🥈 Silver</span> 50–99 pts</div>
+    <div class="legend-item"><span class="badge badge-gold">🥇 Gold</span> 100–199 pts</div>
+    <div class="legend-item"><span class="badge badge-platinum">💎 Platinum</span> 200+ pts</div>
+  </div>
+
+  <!-- GLOBAL TAB -->
+  <div id="tab-global" class="tab-panel active fade-up">
+    <div class="lb-card">
+      <div class="lb-card-head">
+        <div class="lb-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+            <path d="M4 22h16"/>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+          </svg>
+          Top Coders
+        </div>
+        <span class="lb-card-badge">{{ players|length }} Players</span>
+      </div>
+
+      {% if players %}
+      {% set max_score = players[0][2] if players and players[0][2] else 1 %}
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Username</th>
+            <th>Badge</th>
+            <th>Questions Solved</th>
+            <th class="right">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in players %}
+          {% set score = p[2] %}
+          {% set solved = p[1] %}
+          <tr class="{% if loop.index==1 %}r1{% elif loop.index==2 %}r2{% elif loop.index==3 %}r3{% endif %}">
+
+            <td>
+              {% if loop.index == 1 %}<span class="rank-medal">🥇</span>
+              {% elif loop.index == 2 %}<span class="rank-medal">🥈</span>
+              {% elif loop.index == 3 %}<span class="rank-medal">🥉</span>
+              {% else %}<span class="rank-num">#{{ loop.index }}</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="user-cell">
+                <div class="uavatar">{{ p[0][0]|upper }}</div>
+                <span class="uname">{{ p[0] }}</span>
+              </div>
+            </td>
+
+            <td>
+              {% if score >= 200 %}
+                <span class="badge badge-platinum">💎 Platinum</span>
+              {% elif score >= 100 %}
+                <span class="badge badge-gold">🥇 Gold</span>
+              {% elif score >= 50 %}
+                <span class="badge badge-silver">🥈 Silver</span>
+              {% else %}
+                <span class="badge badge-bronze">🥉 Bronze</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="solved-num">{{ solved }}</span>
+              <span style="font-size:12px;color:var(--muted);margin-left:4px;">solved</span>
+            </td>
+
+            <td class="right">
+              <div class="score-wrap">
+                <span class="score-num">{{ score }} pts</span>
+                <div class="score-bar">
+                  <div class="score-fill" style="width:{{ ((score / max_score) * 100)|int }}%"></div>
+                </div>
+              </div>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty">No submissions yet. Solve a challenge to appear here!</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- CONTEST / PER-CHALLENGE TAB -->
+  <div id="tab-contests" class="tab-panel">
+    <div class="lb-card">
+      <div class="lb-card-head">
+        <div class="lb-card-title">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          Challenge-Specific Leaderboard
+        </div>
+        <span class="lb-card-badge" style="background:rgba(59,130,246,0.12);color:var(--blue);">{{ questions|length }} Challenges</span>
+      </div>
+
+      {% if questions %}
+      {% set max_solvers = questions[0][3] if questions and questions[0][3] else 1 %}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Challenge</th>
+            <th>Difficulty</th>
+            <th>Points</th>
+            <th class="right">Solvers</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in questions %}
+          <tr>
+            <td><span class="rank-num">{{ loop.index }}</span></td>
+            <td style="font-weight:500;">{{ q[1] }}</td>
+            <td><span class="diff-badge diff-{{ q[2] }}">{{ q[2] }}</span></td>
+            <td>
+              <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted2);">
+                {% if q[2]=='Easy' %}10{% elif q[2]=='Medium' %}20{% else %}30{% endif %} pts
+              </span>
+            </td>
+            <td class="right">
+              <div class="solvers-bar-wrap" style="justify-content:flex-end;">
+                <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted2);">{{ q[3] }}</span>
+                <div class="solvers-bar" style="max-width:80px;">
+                  <div class="solvers-fill" style="width:{{ (((q[3] or 0) / (max_solvers or 1)) * 100)|int }}%"></div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty">No challenges available yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

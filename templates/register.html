@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Typing Racer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-box fade-up">
+    <div style="width:44px;height:44px;border-radius:12px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--accent-bright);">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    </div>
+    <h2>Create account</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin:6px 0 28px;">Start your typing journey</p>
+    <form method="POST" id="regForm">
+      <input type="text" name="username" placeholder="Username" required autocomplete="username" minlength="3">
+      <input type="password" name="password" placeholder="Password" required autocomplete="new-password" minlength="4">
+      <button type="submit" id="regBtn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Create Account
+      </button>
+    </form>
+    <p style="margin-top:20px;">
+      Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+    </p>
+  </div>
+</div>
+<script>
+document.getElementById('regForm').addEventListener('submit', function() {
+  const btn = document.getElementById('regBtn');
+  btn.innerHTML = 'Creating account...';
+  btn.disabled = true;
+});
+</script>
+</body>
+</html>

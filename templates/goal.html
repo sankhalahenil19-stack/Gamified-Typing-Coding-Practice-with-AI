@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Goal Tracker — Typing Racer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="navbar">
+  <h2>Typing Racer</h2>
+  <div>
+    <a href="/">Home</a>
+    <a href="/leaderboard">Leaderboard</a>
+  </div>
+</nav>
+
+<div style="max-width:480px;margin:80px auto;padding:0 24px;" class="fade-up">
+  <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:24px;padding:48px;text-align:center;">
+    <div style="width:44px;height:44px;border-radius:12px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--green);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    </div>
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:6px;">Set Your WPM Goal</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:28px;">Track your progress and stay motivated</p>
+
+    <input id="goalInput" type="number" placeholder="Target WPM (e.g. 80)"
+      style="width:100%;padding:12px 14px;border-radius:8px;border:1px solid var(--border);outline:none;background:var(--bg-subtle);color:var(--text-primary);font-size:15px;font-family:var(--font-sans);text-align:center;transition:border-color 0.2s,box-shadow 0.2s;">
+    <button onclick="saveGoal()" style="width:100%;margin-top:12px;padding:13px;">
+      Save Goal
+    </button>
+
+    <div id="savedGoal" style="margin-top:20px;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;display:none;">
+      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Your Current Goal</div>
+      <div id="goalDisplay" style="font-size:28px;font-weight:800;letter-spacing:-0.03em;color:var(--green);"></div>
+    </div>
+
+    <a href="/" style="display:block;margin-top:16px;font-size:13px;color:var(--text-muted);text-decoration:none;">← Back to Race</a>
+  </div>
+</div>
+
+<script>
+const goalInput = document.getElementById("goalInput");
+goalInput.addEventListener('focus', () => { goalInput.style.borderColor='var(--accent)'; goalInput.style.boxShadow='0 0 0 3px rgba(59,130,246,0.12)'; });
+goalInput.addEventListener('blur', () => { goalInput.style.borderColor='var(--border)'; goalInput.style.boxShadow='none'; });
+
+function saveGoal() {
+  const goal = goalInput.value;
+  if (!goal) return;
+  localStorage.setItem("typingGoal", goal);
+  document.getElementById("goalDisplay").textContent = goal + " WPM";
+  document.getElementById("savedGoal").style.display = "block";
+}
+
+window.onload = function() {
+  const saved = localStorage.getItem("typingGoal");
+  if (saved) {
+    goalInput.value = saved;
+    document.getElementById("goalDisplay").textContent = saved + " WPM";
+    document.getElementById("savedGoal").style.display = "block";
+  }
+}
+</script>
+</body>
+</html>
